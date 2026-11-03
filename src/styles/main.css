@@ -1266,57 +1266,65 @@
     }
   }
 
-  /* Testimonials (placeholders) */
+  /* Customer reviews: quote cards on the same surface, corners and spacing
+     as the product cards. */
   .reviews {
     padding-top: 0;
   }
 
   .reviews__list {
     display: grid;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 56px var(--col-gap);
+    align-items: stretch;
     margin-top: clamp(36px, 5vw, 64px);
   }
 
   .review {
-    display: grid;
-    align-content: start;
-    gap: 18px;
-    padding: 28px;
-    border: 1px dashed var(--field-border);
-    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin: 0;
+    padding: clamp(28px, 4vw, 48px);
+    border-radius: var(--radius);
+    background: var(--frame-bg, #fbf9f5);
   }
 
-  .review__tag {
-    justify-self: start;
-    padding: 3px 11px 4px;
-    border-radius: 999px;
-    background: var(--bark);
-    color: var(--ivory);
-    font-size: 0.75rem;
-    font-weight: 600;
+  .review__mark {
+    height: 0.5em;
+    color: var(--amber-ink);
+    font-family: var(--font-display);
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+
+  .review__quote {
+    flex: 1;
+    margin: 0;
+  }
+
+  .review__quote p {
+    max-width: none;
+    color: var(--bark);
+    font-family: var(--font-display);
+    font-size: var(--step-1);
     line-height: 1.4;
   }
 
-  .review blockquote p {
-    color: var(--heartwood);
-    font-family: var(--font-display);
-    font-size: var(--step-1);
-    font-style: italic;
-    line-height: 1.3;
+  /* Keeps a dash from starting a line. */
+  .review__keep {
+    white-space: nowrap;
   }
 
   .review__by {
     color: var(--heartwood);
     font-size: var(--step--1);
+    font-weight: 600;
   }
 
-  @media (min-width: 820px) {
+  @media (min-width: 560px) {
     .reviews__list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .review {
-      min-height: 230px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
