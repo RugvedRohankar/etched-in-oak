@@ -64,13 +64,15 @@ function startLenis() {
 
 /* --------------------------------------------------------------------- hero */
 
-function hero(lenis) {
+// Phones get the static ornament: small screens, landscape phones included.
+const PHONE = '(max-width: 767px), (max-height: 500px)';
+
+function hero() {
   const el = $('.hero');
   const stage = $('[data-hero-stage]', el);
   const title = $('[data-hero-title]', el);
 
-  // One orchestrated moment on load: the headline rises line by line while the
-  // ornament drops in on its twine (see hero-ornament.js).
+  // One orchestrated moment on load: the headline rises line by line.
   document.documentElement.classList.remove('is-loading');
   SplitText.create(title, {
     type: 'lines',
@@ -90,40 +92,62 @@ function hero(lenis) {
     scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true },
   });
 
+  // The static ornament is already on screen. On larger screens the 3D one
+  // loads once the page has finished loading and the browser is idle, then
+  // fades in exactly on top of it.
+  const canvas = $('[data-hero-canvas]', el);
+  const fallback = $('[data-hero-fallback]', el);
+  const photo = $('[data-hero-photo]', el);
+  const phone = window.matchMedia(PHONE);
   let ornament = null;
+  let loading = false;
   let cancelled = false;
-  if (!supportsWebGL()) {
-    el.classList.add('hero--static');
-  } else {
-    // If WebGL is slow to arrive, show the plain image rather than an empty stage.
-    const patience = setTimeout(() => el.classList.add('hero--static'), 3500);
+
+  // Only one of the two is announced to screen readers at a time.
+  const show3D = (on) => {
+    el.classList.toggle('hero--webgl', on);
+    if (on) {
+      canvas.removeAttribute('aria-hidden');
+      fallback.setAttribute('aria-hidden', 'true');
+    } else {
+      canvas.setAttribute('aria-hidden', 'true');
+      fallback.removeAttribute('aria-hidden');
+    }
+  };
+
+  const start3D = () => {
+    if (cancelled || ornament || loading || phone.matches || !supportsWebGL()) return;
+    loading = true;
     import('./hero-ornament.js')
-      .then(({ createHeroOrnament }) =>
-        createHeroOrnament({
-          stage,
-          canvas: $('[data-hero-canvas]', el),
-          photo: $('[data-hero-photo]', el),
-          lenis,
-        }),
-      )
+      .then(({ createHeroOrnament }) => createHeroOrnament({ stage, canvas, photo }))
       .then((instance) => {
-        clearTimeout(patience);
-        if (cancelled) return instance.dispose();
+        loading = false;
+        if (cancelled || phone.matches) return instance.dispose();
         ornament = instance;
-        el.classList.remove('hero--static');
-        el.classList.add('hero--webgl');
+        show3D(true);
       })
       .catch(() => {
-        clearTimeout(patience);
-        el.classList.add('hero--static');
+        loading = false;
       });
-  }
+  };
+  const stop3D = () => {
+    ornament?.dispose();
+    ornament = null;
+    show3D(false);
+  };
+
+  const onPhoneChange = () => (phone.matches ? stop3D() : start3D());
+  phone.addEventListener('change', onPhoneChange);
+  const idle = window.requestIdleCallback ?? ((fn) => setTimeout(fn, 300));
+  const begin = () => idle(start3D, { timeout: 2500 });
+  if (document.readyState === 'complete') begin();
+  else window.addEventListener('load', begin, { once: true });
 
   return () => {
     cancelled = true;
-    ornament?.dispose();
-    el.classList.remove('hero--webgl');
-    el.classList.add('hero--static');
+    phone.removeEventListener('change', onPhoneChange);
+    window.removeEventListener('load', begin);
+    stop3D();
   };
 }
 
@@ -431,7 +455,6 @@ export function initMotion() {
 
   media.add('(prefers-reduced-motion: reduce)', () => {
     root.classList.remove('motion', 'is-loading');
-    $('.hero')?.classList.add('hero--static');
   });
 
   media.add('(prefers-reduced-motion: no-preference)', () => {
@@ -439,7 +462,7 @@ export function initMotion() {
     smooth = startLenis();
 
     const cleanups = [
-      hero(smooth.lenis),
+      hero(),
       textReveals(),
       imageReveals(),
       hoverSheen(),

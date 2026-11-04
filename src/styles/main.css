@@ -575,20 +575,19 @@
     --d: min(66cqw, 62cqh);
     --disc-y: 60%;
     /* Where the ornament sits inside the hero photo, as fractions of the
-       photo's width: the round face's diameter and centre, and where the
-       twine leaves the top edge. The face is drawn at --d, centred on
-       --disc-y. Update these if the photo is replaced. */
+       photo's width: the round face's diameter and centre, and the hanging
+       hole the twine runs into. The face is drawn at --d, centred on
+       --disc-y. The 3D version reads these too. Update them (and re-run
+       scripts/make-hero-outline.mjs) if the photo is replaced. */
     --photo-face: 0.766;
     --photo-x: 0.496;
     --photo-y: 0.521;
-    --photo-twine-x: 0.495;
-    --photo-twine-w: 0.053;
+    --photo-hole-x: 0.496;
+    --photo-hole-y: 0.1164;
+    --photo-twine-w: 0.062;
     --photo-w: calc(var(--d) / var(--photo-face));
+    --twine-w: calc(var(--photo-w) * var(--photo-twine-w));
     position: relative;
-    /* The stage is its own layer (it is a size container), so it blends as a
-       whole: the photo's white backdrop takes on the page colour while the
-       wood and twine, which are darker, keep their own. */
-    mix-blend-mode: darken;
     height: clamp(310px, 50svh, 480px);
     margin-inline: calc(var(--gutter) * -1);
     container-type: size;
@@ -599,51 +598,63 @@
     inset: 0;
   }
 
+  /* The photo is cut to the ornament's own outline, which leaves out the
+     photo's backdrop and its twine; the shadow is cast by that outline. */
+  .hero__photo-wrap {
+    position: absolute;
+    left: calc(50% - var(--photo-w) * var(--photo-x));
+    top: calc(var(--disc-y) - var(--photo-w) * var(--photo-y));
+    width: var(--photo-w);
+    height: var(--photo-w);
+    filter: drop-shadow(calc(var(--d) * 0.026) calc(var(--d) * 0.045) calc(var(--d) * 0.075) rgb(32 20 12 / 0.28));
+  }
+
   .hero__photo {
-    position: absolute;
-    left: calc(50% - var(--photo-w) * var(--photo-x));
-    top: calc(var(--disc-y) - var(--photo-w) * var(--photo-y));
-    width: var(--photo-w);
-    height: var(--photo-w);
+    display: block;
+    width: 100%;
+    height: 100%;
     max-width: none;
+    -webkit-mask: url('/products/peace-on-earth-mask.svg') 0 0 / 100% 100% no-repeat;
+    mask: url('/products/peace-on-earth-mask.svg') 0 0 / 100% 100% no-repeat;
   }
 
-  /* The ornament's soft shadow on the wall behind it, as in the WebGL view:
-     offset down and right, kept off the ornament itself (face and hanging
-     tab), and faded out before the photo's edges. */
-  .hero__shadow {
-    position: absolute;
-    left: calc(50% - var(--photo-w) * var(--photo-x));
-    top: calc(var(--disc-y) - var(--photo-w) * var(--photo-y));
-    width: var(--photo-w);
-    height: var(--photo-w);
-    background: radial-gradient(
-      ellipse calc(var(--photo-face) * 72.5%) calc(var(--photo-face) * 72.5%) at
-        calc((var(--photo-x) + var(--photo-face) * 0.06) * 100%) calc((var(--photo-y) + var(--photo-face) * 0.085) * 100%),
-      rgb(32 18 8 / 0.3) 48%,
-      rgb(32 18 8 / 0) 100%
-    );
-    mask:
-      radial-gradient(
-        ellipse calc(var(--photo-face) * 50%) calc(var(--photo-face) * 50%) at calc(var(--photo-x) * 100%)
-          calc(var(--photo-y) * 100%),
-        transparent 99%,
-        #000 100%
-      ),
-      radial-gradient(ellipse 7% 7% at calc(var(--photo-twine-x) * 100%) 9%, transparent 99%, #000 100%),
-      radial-gradient(ellipse 50% 50% at 50% 50%, #000 82%, transparent 98%);
-    mask-composite: intersect;
-    mix-blend-mode: multiply;
-  }
-
-  /* Continues the photo's twine up to the top of the page. */
+  /* One jute twine from the top of the page, over the tab and into the hole.
+     Layers, top to bottom: the end darkening as it goes into the hole, round
+     shading, fibres, and the twist of two strands. The 3D twine uses the same
+     colours and thickness. */
   .hero__twine {
     position: absolute;
-    left: calc(50% + (var(--photo-twine-x) - var(--photo-x)) * var(--photo-w));
+    left: calc(50% + (var(--photo-hole-x) - var(--photo-x)) * var(--photo-w));
     top: 0;
-    width: calc(var(--photo-w) * var(--photo-twine-w));
-    height: calc(var(--disc-y) - var(--photo-w) * var(--photo-y) + 2px);
-    background: linear-gradient(90deg, #b4906b 0 44%, transparent 44% 56%, #b4906b 56%);
+    width: var(--twine-w);
+    height: calc(var(--disc-y) - var(--photo-w) * (var(--photo-y) - var(--photo-hole-y)));
+    background:
+      linear-gradient(to bottom, rgb(52 34 18 / 0) calc(100% - var(--twine-w) * 0.75), rgb(52 34 18 / 0.6)),
+      linear-gradient(
+        90deg,
+        rgb(70 46 24 / 0.5),
+        rgb(70 46 24 / 0) 30%,
+        rgb(255 240 210 / 0.2) 48%,
+        rgb(70 46 24 / 0) 68%,
+        rgb(70 46 24 / 0.55)
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9 .12' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .86 0 0 0 0 .7 0 0 0 1.1 -.55'/%3E%3C/filter%3E%3Crect width='60' height='60' filter='url(%23f)'/%3E%3C/svg%3E") 0 0 / calc(var(--twine-w) * 0.9) auto,
+      repeating-linear-gradient(
+        -58deg,
+        #8d6b47 0,
+        #b48f69 calc(var(--twine-w) * 0.07),
+        #cfae85 calc(var(--twine-w) * 0.15),
+        #b48f69 calc(var(--twine-w) * 0.23),
+        #8d6b47 calc(var(--twine-w) * 0.305)
+      );
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - var(--twine-w) * 0.9),
+      82% 100%,
+      18% 100%,
+      0 calc(100% - var(--twine-w) * 0.9)
+    );
     translate: -50% 0;
   }
 
@@ -1437,15 +1448,14 @@
     opacity: 0;
   }
 
-  /* With motion on, WebGL draws the ornament; the plain image stays as the
-     fallback and only shows if WebGL is unavailable. */
-  .motion .hero__fallback {
-    opacity: 0;
+  /* The static ornament shows first; the 3D one fades in exactly on top of
+     it once it has loaded, and the static one fades out underneath. */
+  .hero__fallback {
     transition: opacity 0.6s ease;
   }
 
-  .motion .hero--static .hero__fallback {
-    opacity: 1;
+  .hero--webgl .hero__fallback {
+    opacity: 0;
   }
 
   .hero--webgl .hero__canvas {

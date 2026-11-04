@@ -29,6 +29,7 @@
     <link rel="apple-touch-icon" href="/brand/etched-in-oak-icon-512.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <link rel="preload" as="image" href="/products/peace-on-earth.webp" type="image/webp" fetchpriority="high" />
+    <link rel="preload" as="image" href="/products/peace-on-earth-mask.svg" type="image/svg+xml" />
     <script>
       // Motion is opt-in: these classes only exist when scripts run and the
       // visitor has not asked for reduced motion. The timer is a safety net so
@@ -92,26 +93,35 @@
       <!-- ============ HERO ============ -->
       <section class="hero" id="top" aria-labelledby="hero-title">
         <!--
-          The hero ornament is drawn in WebGL from this product photo so it can
-          sway on its twine. Where the ornament sits inside the photo is set by
-          the --photo-* values on .hero__stage in main.css.
+          The hero ornament. Everyone first sees the photo below, cut to the
+          ornament's outline (peace-on-earth-mask.svg) with one drawn twine and
+          a soft shadow. On larger screens with motion allowed, a 3D version
+          (src/js/hero-ornament.js) loads afterwards and fades in on top.
+          Both use the outline from scripts/make-hero-outline.mjs.
         -->
         <div class="hero__stage" data-hero-stage>
           <div class="hero__fallback" data-hero-fallback>
+            <div class="hero__photo-wrap">
+              <img
+                class="hero__photo"
+                data-hero-photo
+                src="/products/peace-on-earth.webp"
+                width="1254"
+                height="1254"
+                alt="Etched wooden Peace on Earth ornament with a dove carrying an olive branch"
+                fetchpriority="high"
+                decoding="async"
+              />
+            </div>
             <span class="hero__twine" aria-hidden="true"></span>
-            <img
-              class="hero__photo"
-              data-hero-photo
-              src="/products/peace-on-earth.webp"
-              width="1254"
-              height="1254"
-              alt="Etched wooden Peace on Earth ornament with a dove carrying an olive branch"
-              fetchpriority="high"
-              decoding="async"
-            />
-            <span class="hero__shadow" aria-hidden="true"></span>
           </div>
-          <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+          <canvas
+            class="hero__canvas"
+            data-hero-canvas
+            role="img"
+            aria-label="Etched wooden Peace on Earth ornament with a dove carrying an olive branch"
+            aria-hidden="true"
+          ></canvas>
         </div>
 
         <div class="hero__copy">
