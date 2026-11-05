@@ -188,7 +188,7 @@ function backdrop(kind, W, H) {
   return `<defs>${vig}${wash}</defs>${full(`fill="${base}"`)}${full('filter="url(#paper)" opacity="0.5"')}${full('fill="url(#wash)"')}${full('fill="url(#vig)"')}`;
 }
 
-function slice({ cx, cy, R, design = 'blank', seed = 1, hole = false, uid = 'a' }) {
+function slice({ cx, cy, R, design = 'blank', seed = 1, hole = false, uid = 'a', rimOnly = false }) {
   const r = rng(seed);
   let rings = '';
   let rad = 8 + r() * 5;
@@ -198,8 +198,11 @@ function slice({ cx, cy, R, design = 'blank', seed = 1, hole = false, uid = 'a' 
   }
   const a = r() * Math.PI * 2;
   const crack = `<path d="M${f(Math.cos(a) * 3)} ${f(Math.sin(a) * 3)} Q${f(Math.cos(a + 0.2) * 16)} ${f(Math.sin(a + 0.2) * 16)} ${f(Math.cos(a - 0.05) * 30)} ${f(Math.sin(a - 0.05) * 30)}" fill="none" stroke="#5A3A22" stroke-width="0.7" opacity="0.4" stroke-linecap="round"/>`;
+  const bark = rimOnly
+    ? '<rect x="-101" y="-101" width="202" height="202" fill="#2F2017"/><rect x="-101" y="-101" width="202" height="202" fill="#000" filter="url(#pores)" opacity="0.5"/>'
+    : '<circle r="97" fill="#2F2017" filter="url(#bark)"/>';
   return `<g transform="translate(${cx} ${cy}) scale(${f(R / 100)})">
-    <circle r="97" fill="#2F2017" filter="url(#bark)"/>
+    ${bark}
     <circle r="91" fill="url(#face)"/>
     <g clip-path="url(#faceclip)">
       <g filter="url(#wobble)">${rings}</g>
@@ -285,3 +288,72 @@ for (const [name, markup, quality = 80] of shots) {
   const info = await sharp(Buffer.from(markup)).webp({ quality, effort: 5 }).toFile(file);
   console.log(`${name}.webp  ${info.width}x${info.height}  ${(info.size / 1024).toFixed(0)} KB`);
 }
+
+/* ---------- hero ornament face ---------- */
+
+// The face of the 3D hero ornament: the walnut slice (bark runs to the edges
+// of the square so it maps onto the disc), with the Peace on Earth design
+// burned into it. Only the design's dark engraved lines are taken from the
+// product photo, inside its round face, so none of the photo's backdrop,
+// twine or hanging tab comes along.
+const DOVE = join(OUT, '..', 'products', 'peace-on-earth.webp');
+const DOVE_FACE = { x: 622, y: 654, crop: 463 }; // the photo's face centre; crop stays inside its cut edge
+const FACE_SIZE = 1024;
+const DESIGN_SCALE = 0.83; // keeps the design's outer border clear of the hanging hole
+
+async function heroFace() {
+  const base = await sharp(
+    Buffer.from(svg(FACE_SIZE, FACE_SIZE, 5, 10, slice({ cx: 512, cy: 512, R: 512, design: 'blank', seed: 5, hole: true, uid: 'h', rimOnly: true }))),
+  )
+    .png()
+    .toBuffer();
+
+  // How strongly each pixel is engraved: dark lines are 1, plain wood is 0,
+  // with the soft edges of each line in between; faded out at the crop edge.
+  const size = DOVE_FACE.crop * 2;
+  const { data } = await sharp(DOVE)
+    .extract({ left: DOVE_FACE.x - DOVE_FACE.crop, top: DOVE_FACE.y - DOVE_FACE.crop, width: size, height: size })
+    .removeAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const burn = Buffer.alloc(size * size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const i = (y * size + x) * 3;
+      const luma = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      const line = Math.min(1, Math.max(0, (165 - luma) / 95));
+      const r = Math.hypot(x - DOVE_FACE.crop, y - DOVE_FACE.crop);
+      const edge = Math.min(1, Math.max(0, (DOVE_FACE.crop - r) / 4));
+      burn[y * size + x] = Math.round(line * edge * 255);
+    }
+  }
+  const out = Math.round(size * DESIGN_SCALE);
+  const at = Math.round((FACE_SIZE - out) / 2);
+  const raw = { width: out, height: out, channels: 1 };
+  const mask = await sharp(burn, { raw: { width: size, height: size, channels: 1 } }).resize(out, out).extractChannel(0).raw().toBuffer();
+  const halo = await sharp(mask, { raw }).blur(2.2).extractChannel(0).raw().toBuffer();
+  if (mask.length !== out * out || halo.length !== out * out) throw new Error('unexpected mask size');
+
+  // The same burn as the drawn designs: a dark core, a soft scorched halo,
+  // and a faint light lip just below and right of each line.
+  const layer = async (colour, opacity, alpha, shift = 0) => {
+    const a = Buffer.alloc(out * out);
+    for (let y = shift; y < out; y++) {
+      for (let x = shift; x < out; x++) a[y * out + x] = Math.round(alpha[(y - shift) * out + (x - shift)] * opacity);
+    }
+    const input = await sharp({ create: { width: out, height: out, channels: 3, background: colour } })
+      .joinChannel(a, { raw })
+      .png()
+      .toBuffer();
+    return { input, left: at, top: at };
+  };
+  const layers = [
+    await layer('#F6DFB8', 0.35, mask, 2),
+    await layer('#5B3317', 0.5, halo),
+    await layer('#2B180D', 0.92, mask),
+  ];
+  const info = await sharp(base).composite(layers).webp({ quality: 88, effort: 5 }).toFile(join(OUT, 'hero-ornament-face.webp'));
+  console.log(`hero-ornament-face.webp  ${info.width}x${info.height}  ${(info.size / 1024).toFixed(0)} KB`);
+}
+
+await heroFace();
