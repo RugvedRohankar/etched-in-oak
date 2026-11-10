@@ -243,13 +243,15 @@ const svg = (W, H, seed, blur, body) =>
 
 /* ---------- shots ---------- */
 
+// With no bg, the piece is drawn on a transparent background with no shadow,
+// framed like the cut-out product photos in public/products.
 function productShot({ W, H, bg, R, cx = W / 2, cy = H / 2, design, seed, hang = false, sway = 0, under }) {
-  let body = backdrop(bg, W, H);
+  let body = bg ? backdrop(bg, W, H) : '';
   if (hang) body += shadow(cx, cy, R, true) + twine(cx, cy, R, sway);
   if (under) {
     body += shadow(under.cx, under.cy, under.R, false) + slice({ ...under, design: 'blank', seed: seed + 40, uid: 'u' });
   }
-  if (!hang) body += shadow(cx, cy, R, false);
+  if (!hang && bg) body += shadow(cx, cy, R, false);
   body += slice({ cx, cy, R, design, seed, hole: hang || design === 'vinyl', uid: 'm' });
   return svg(W, H, seed, f(R * 0.07), body);
 }
@@ -277,7 +279,8 @@ function studioShot() {
 }
 
 const shots = [
-  ['collection/vinyl-record', productShot({ W: 1500, H: 1200, bg: 'linen', R: 420, cx: 780, cy: 660, design: 'vinyl', seed: 14 })],
+  // 1200 x 1200, the slice 80% of the width across its bark, like every product image.
+  ['collection/vinyl-record', productShot({ W: 1200, H: 1200, bg: null, R: 495, design: 'vinyl', seed: 14 })],
   ['custom-blank', productShot({ W: 1200, H: 1200, bg: 'linen', R: 400, cy: 680, design: 'blank', seed: 21, hang: true, sway: 14 })],
   ['about-studio', studioShot()],
 ];
@@ -296,7 +299,9 @@ for (const [name, markup, quality = 80] of shots) {
 // burned into it. Only the design's dark engraved lines are taken from the
 // product photo, inside its round face, so none of the photo's backdrop,
 // twine or hanging tab comes along.
-const DOVE = join(OUT, '..', 'products', 'peace-on-earth.webp');
+// Read from the original photo (with its white backdrop), which these crop
+// coordinates were measured on; public/products holds the cut-out version.
+const DOVE = join(OUT, '..', '..', 'backups', 'original-product-images', 'products', 'peace-on-earth.webp');
 const DOVE_FACE = { x: 622, y: 654, crop: 463 }; // the photo's face centre; crop stays inside its cut edge
 const FACE_SIZE = 1024;
 const DESIGN_SCALE = 0.83; // keeps the design's outer border clear of the hanging hole

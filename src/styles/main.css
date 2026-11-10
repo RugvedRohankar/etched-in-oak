@@ -682,6 +682,11 @@
     color: var(--heartwood);
   }
 
+  .section-head .section-head__note {
+    margin-top: -8px;
+    font-size: var(--step--1);
+  }
+
   .group__head {
     display: flex;
     flex-wrap: wrap;
@@ -723,18 +728,14 @@
     flex-direction: column;
   }
 
-  @media (max-width: 599px) {
-    .pieces .piece__media {
-      --placeholder-label: 'Placeholder';
-    }
-  }
-
+  /* Every product image is a transparent cut-out, framed the same way, so all
+     cards share this one background. */
   .piece__media {
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
     border-radius: var(--radius);
-    background: var(--frame-bg, #fbf9f5);
+    background: var(--cream);
   }
 
   .piece__inner {
@@ -805,6 +806,12 @@
 
     .section-head p {
       grid-column: 8 / -1;
+    }
+
+    .section-head .section-head__note {
+      grid-column: 1 / span 6;
+      grid-row: 2;
+      margin-top: 0;
     }
 
     .pieces {

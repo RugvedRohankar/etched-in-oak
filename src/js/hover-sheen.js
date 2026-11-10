@@ -26,7 +26,8 @@ const fragmentShader = /* glsl */ `
   varying vec2 vUv;
 
   // Same fit as the photo's CSS object-fit (cover or contain). With contain,
-  // anything outside the photo shows the frame colour.
+  // anything outside the photo shows the frame colour, and so do the photo's
+  // transparent parts.
   vec2 fit(vec2 uv) {
     float box = uRes.x / uRes.y;
     float img = uImg.x / uImg.y;
@@ -46,7 +47,8 @@ const fragmentShader = /* glsl */ `
 
     vec2 st = fit(uv);
     bool inside = all(greaterThanEqual(st, vec2(0.0))) && all(lessThanEqual(st, vec2(1.0)));
-    vec3 color = inside ? texture2D(uTex, st).rgb : uBg;
+    vec4 photo = inside ? texture2D(uTex, st) : vec4(uBg, 1.0); // premultiplied
+    vec3 color = photo.rgb + uBg * (1.0 - photo.a);
 
     float band = (vUv.x + (1.0 - vUv.y) * 0.55) - uSheen;
     color += exp(-band * band * 34.0) * 0.17 * vec3(1.0, 0.93, 0.8);
@@ -93,6 +95,8 @@ export function createHoverSheen(tiles) {
       texture.minFilter = LinearFilter;
       texture.magFilter = LinearFilter;
       texture.generateMipmaps = false;
+      // Premultiplied, so filtering never pulls dark fringes into cut-out edges.
+      texture.premultiplyAlpha = true;
       texture.needsUpdate = true;
       textures.set(img, texture);
     }

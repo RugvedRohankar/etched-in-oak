@@ -144,7 +144,8 @@ export async function createHeroOrnament({ stage, canvas, disc, lenis }) {
   function tick(_time, deltaMs) {
     const dt = Math.min(0.033, (deltaMs || 16.7) / 1000);
     clock += dt;
-    const restTheta = 0.015 * Math.sin(clock * 0.9);
+    // At rest it keeps swinging gently, about 3° either way, once every 7 s.
+    const restTheta = 0.05 * Math.sin(clock * 0.9);
     const restPhi = 0.11 * Math.sin(clock * 0.55 + 1) + lean;
     thetaV += (-11 * (theta - restTheta) - 1.3 * thetaV + kick) * dt;
     phiV += (-6 * (phi - restPhi) - 1.15 * phiV + twist) * dt;
