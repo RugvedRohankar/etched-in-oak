@@ -61,28 +61,40 @@
 /* ----------------------------------------------------------------- tokens */
 @layer tokens {
   :root {
-    /* Wood, from the bark in: the palette is the cross-section of a branch. */
-    --bark: #20140c;
-    --walnut: #3a2416;
-    --walnut-deep: #2a190f;
-    --heartwood: #6b4a33;
-    --sand: #d8c3a5;
-    --sapwood: #ebdcc2;
-    --ivory: #f5ecdc;
-    --cream: #fbf5e9;
+    /* Brand colours: brown ink on cream paper, with forest green as the one
+       accent (buttons, the chosen wood, small icons and link hovers). */
+    --brown: #3b2418;
+    --cream: #f2e8da;
+    --green: #4f6f52;
+    --green-dark: #3e5a41; /* hover; also green text, so it clears 4.5:1 */
+    --white: #fff;
 
-    /* One accent. --amber is a fill and a colour for dark surfaces only;
-       --amber-ink is the same hue made dark enough to read on ivory. */
-    --amber: #e3a86b;
-    --amber-ink: #8f5318;
-    --amber-mark: #b97632;
+    /* Tints, each checked against WCAG AA where it is used:
+       --brown-soft on cream paper 7.2:1, --cream-soft on brown paper 9.1:1,
+       --field-border on cream 3.6:1 (control outlines need 3:1). */
+    --brown-soft: #5f4637;
+    --cream-soft: #d9cbb8;
+    --field-border: #8b7565;
+    --rule: color-mix(in srgb, var(--brown) 20%, transparent);
+    --focus: var(--brown);
 
-    --error: #a3321f;
-    --rule: color-mix(in srgb, var(--bark) 18%, transparent);
-    --field-border: #8a6b52;
-    --focus: var(--bark);
+    /* Paper. Every background on the site is one of these two, never a flat
+       colour or a gradient. Both are made from the same scan:
+       CREDITS: "Paper 002" by ambientCG (https://ambientcg.com/a/Paper002),
+       CC0 1.0 public domain. Tinted to the brand cream and brown, keeping
+       only its fine fibres and flecks; the tile repeats seamlessly. */
+    --paper: var(--cream) url('../assets/paper-cream.webp') 0 0 / 794px 1024px repeat;
+    --paper-dark: var(--brown) url('../assets/paper-brown.webp') 0 0 / 794px 1024px repeat;
+
+    /* Frosted glass, for the floating nav bar and the review cards only. */
+    --glass: rgb(248 242 233 / 0.55);
+    --glass-solid: rgb(244 236 225 / 0.94); /* where backdrop blur isn't supported */
+    --glass-border: rgb(255 255 255 / 0.65);
+    --glass-blur: blur(16px) saturate(1.2);
+    --glass-shadow: 0 10px 30px rgb(59 36 24 / 0.08);
 
     --font-display: 'Times New Roman', Times, 'Tinos', 'Liberation Serif', serif;
+    --font-hero: 'Playfair Display', 'Times New Roman', Times, serif;
     --font-body: 'Instrument Sans Variable', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
 
     --step--1: 0.875rem;
@@ -101,8 +113,6 @@
 
     --radius: 4px;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-
-    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3 0 0 0 0 .19 0 0 0 0 .1 0 0 0 .55 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
   }
 
   @media (min-width: 900px) {
@@ -115,20 +125,20 @@
 /* ------------------------------------------------------------------- base */
 @layer base {
   html {
-    background: var(--ivory);
+    background: var(--paper);
     scroll-padding-top: calc(var(--header-h) + 16px);
-    scrollbar-color: var(--heartwood) var(--sapwood);
+    scrollbar-color: var(--brown-soft) var(--cream);
   }
 
   body {
     min-height: 100svh;
     overflow-x: clip;
-    background: var(--ivory) var(--grain);
-    color: var(--bark);
+    background: var(--paper);
+    color: var(--brown);
     font-family: var(--font-body);
     font-size: var(--step-0);
     line-height: 1.6;
-    caret-color: var(--amber-ink);
+    caret-color: var(--green);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -176,8 +186,8 @@
   }
 
   ::selection {
-    background: var(--amber);
-    color: var(--bark);
+    background: var(--green);
+    color: var(--white);
   }
 
   /* Sections receive focus after an in-page jump so reading continues from
@@ -205,21 +215,20 @@
     z-index: 100;
     padding: 12px 18px;
     border-radius: 999px;
-    background: var(--bark);
-    color: var(--ivory);
+    background: var(--green);
+    color: var(--white);
     transform: translateY(-200%);
   }
 
   .skip-link:focus-visible {
     transform: none;
-    outline-color: var(--amber);
   }
 
   .section {
     padding: var(--section) var(--pad-inline);
   }
 
-  /* Buttons */
+  /* Buttons: green with white text (5.6:1; 7.6:1 on hover). */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -228,8 +237,8 @@
     padding: 0 30px;
     border: 0;
     border-radius: 999px;
-    background: var(--bark);
-    color: var(--ivory);
+    background: var(--green);
+    color: var(--white);
     font-weight: 550;
     font-size: 1rem;
     line-height: 1;
@@ -243,17 +252,11 @@
   }
 
   .btn:hover {
-    background: var(--heartwood);
+    background: var(--green-dark);
   }
 
   .btn:active {
     transform: scale(0.98);
-  }
-
-  .btn:disabled {
-    background: var(--sand);
-    color: var(--heartwood);
-    cursor: progress;
   }
 
   .btn--small {
@@ -262,28 +265,22 @@
     font-size: 0.9375rem;
   }
 
-  .btn--amber {
-    background: var(--amber);
-    color: var(--bark);
-  }
-
-  .btn--amber:hover {
-    background: #efbd88;
-  }
-
   .text-link {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     font-weight: 550;
     text-decoration: underline;
-    text-decoration-color: var(--amber-ink);
+    text-decoration-color: var(--green);
     text-decoration-thickness: 1.5px;
     text-underline-offset: 6px;
-    transition: text-underline-offset 0.25s var(--ease-out);
+    transition:
+      color 0.25s ease,
+      text-underline-offset 0.25s var(--ease-out);
   }
 
   .text-link:hover {
+    color: var(--green-dark);
     text-underline-offset: 3px;
   }
 
@@ -328,30 +325,30 @@
     padding: 13px 14px;
     border: 1px solid var(--field-border);
     border-radius: 6px;
-    background: var(--cream);
-    color: var(--bark);
+    background: transparent;
+    color: var(--brown);
     font-size: 1rem;
     line-height: 1.4;
     transition: border-color 0.2s ease;
   }
 
   .field::placeholder {
-    color: var(--heartwood);
+    color: var(--brown-soft);
     opacity: 1;
   }
 
   .field:hover {
-    border-color: var(--bark);
+    border-color: var(--brown);
   }
 
   .field:focus-visible {
-    border-color: var(--bark);
+    border-color: var(--brown);
     outline-offset: 2px;
   }
 
   .hint {
     margin-top: 8px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
     font-size: var(--step--1);
   }
 
@@ -376,14 +373,81 @@
   }
 
   .chip:hover {
-    border-color: var(--bark);
-    background: var(--cream);
+    border-color: var(--green-dark);
+    color: var(--green-dark);
   }
 
   .chip[aria-pressed='true'] {
-    border-color: var(--bark);
-    background: var(--bark);
-    color: var(--ivory);
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--white);
+  }
+
+  /* Wood choice on a product card, like a size picker. The chosen wood is
+     green with white text; the other has a thin brown outline. */
+  .wood {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    margin: 4px 0 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .wood__option {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .wood__input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .wood__option span,
+  .wood__tag {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--brown);
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 550;
+    line-height: 1;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .wood__input:hover:not(:checked) + span {
+    border-color: var(--green-dark);
+    color: var(--green-dark);
+  }
+
+  .wood__input:checked + span {
+    border-color: var(--green);
+    background: var(--green);
+    color: var(--white);
+  }
+
+  .wood__input:focus-visible + span {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* A product that only comes in one wood shows a plain label instead. */
+  .wood__tag {
+    border-color: var(--green);
+    color: var(--green-dark);
   }
 
   /* Marks every stand-in image. Remove the data-placeholder attribute from an
@@ -400,8 +464,8 @@
     z-index: 3;
     padding: 3px 10px 4px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--cream) 94%, transparent);
-    color: var(--bark);
+    background: var(--paper);
+    color: var(--brown);
     font: 550 0.75rem/1.4 var(--font-body);
     pointer-events: none;
   }
@@ -413,30 +477,34 @@
 
 /* --------------------------------------------------------------- sections */
 @layer sections {
-  /* Header */
+  /* Header: a floating bar of frosted glass. */
   .site-header {
     position: fixed;
-    inset: 0 0 auto;
+    inset: 6px calc(var(--gutter) - 12px) auto;
     z-index: 50;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    height: var(--header-h);
-    padding-inline: var(--gutter);
-    transition:
-      transform 0.5s var(--ease-out),
-      background-color 0.3s ease,
-      box-shadow 0.3s ease;
+    height: calc(var(--header-h) - 10px);
+    padding-inline: 12px;
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+    transition: transform 0.5s var(--ease-out);
   }
 
-  .site-header.is-scrolled {
-    background: color-mix(in srgb, var(--ivory) 96%, transparent);
-    box-shadow: 0 1px 0 var(--rule);
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .site-header {
+      background: var(--glass-solid);
+    }
   }
 
   .site-header.is-hidden {
-    transform: translateY(-101%);
+    transform: translateY(calc(-100% - 12px));
   }
 
   .site-header:focus-within {
@@ -463,10 +531,17 @@
     text-decoration-color: transparent;
     text-decoration-thickness: 1.5px;
     text-underline-offset: 6px;
-    transition: text-decoration-color 0.25s ease;
+    transition:
+      color 0.25s ease,
+      text-decoration-color 0.25s ease;
   }
 
-  .site-nav a:hover,
+  .site-nav a:hover {
+    color: var(--green-dark);
+    text-decoration-color: currentColor;
+  }
+
+  /* Green text would be too faint on the brown footer, so it underlines only. */
   .site-footer nav a:hover {
     text-decoration-color: currentColor;
   }
@@ -506,6 +581,11 @@
   }
 
   @media (min-width: 900px) {
+    .site-header {
+      inset-inline: calc(var(--gutter) - 18px);
+      padding-inline: 18px;
+    }
+
     .site-nav {
       display: block;
     }
@@ -524,8 +604,8 @@
     margin: 0;
     padding: 0;
     border: 0;
-    background: var(--ivory) var(--grain);
-    color: var(--bark);
+    background: var(--paper);
+    color: var(--brown);
   }
 
   .menu[open] {
@@ -534,7 +614,7 @@
   }
 
   .menu::backdrop {
-    background: var(--ivory);
+    background: var(--paper);
   }
 
   .menu__bar {
@@ -562,78 +642,63 @@
     text-decoration: none;
   }
 
-  /* Hero */
+  /* Hero: a huge headline, with the Peace on Earth ornament hanging in front of
+     it, far bigger than the screen and bleeding off the right edge.
+
+     The ornament is one image, /public/images/hero-ornament.webp (974 x 1141).
+     --pivot-x / --pivot-y mark where its twine leaves the top of the image (as
+     a share of the image); the swing turns around that point. --twine-left and
+     --twine-w place the repeating twine strip that carries the twine on up to
+     the top of the page. Update all four when the image changes (see the
+     comment in index.html). */
   .hero {
+    --pivot-x: 49.72%;
+    --pivot-y: 0%;
+    --twine-left: 45.59%;
+    --twine-w: 8.42%;
+    /* How far above the image the top of the page is. Zero on large screens,
+       where the image starts at the top; src/js/hero.js measures it on phones. */
+    --twine-reach: 0px;
+    /* Largest the ornament is shown: 1.15 x the photo's own 1141 px height,
+       the most it can be enlarged and still look sharp on a standard screen.
+       (On Retina screens it is enlarged about 2x and looks softer; a photo
+       about 2300 px tall would make it sharp there too.) */
+    --orn-cap: 1312px;
+    --orn-w: min(112vw, calc(var(--orn-cap) * 974 / 1141));
+    --orn-h: calc(var(--orn-w) * 1141 / 974);
     position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    padding: 0 var(--pad-inline) 64px;
-    overflow: clip;
-  }
-
-  .hero__stage {
-    --d: min(66cqw, 62cqh);
-    --disc-y: 60%;
-    position: relative;
-    height: clamp(310px, 50svh, 480px);
-    margin-inline: calc(var(--gutter) * -1);
-    container-type: size;
-  }
-
-  .hero__fallback {
-    position: absolute;
-    inset: 0;
-  }
-
-  .hero__disc {
-    position: absolute;
-    left: 50%;
-    top: var(--disc-y);
-    width: var(--d);
-    height: var(--d);
-    border-radius: 50%;
-    object-fit: cover;
-    translate: -50% -50%;
-    box-shadow: 14px 24px 40px rgb(32 20 12 / 0.28);
-  }
-
-  .hero__twine {
-    position: absolute;
-    left: 50%;
-    top: 0;
-    width: 3px;
-    height: calc(var(--disc-y) - var(--d) * 0.39);
-    border-radius: 2px;
-    background: #b99a68;
-    translate: -50% 0;
-  }
-
-  .hero__canvas {
-    position: absolute;
-    inset: 0 -18% -12%;
-    width: 136%;
-    height: 112%;
-    max-width: none;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
+    display: flex;
+    flex-direction: column;
+    padding: calc(var(--header-h) + 36px) var(--pad-inline) 0;
+    /* The ornament is far bigger than the screen; it must never cause a
+       sideways scrollbar (or spill out of the hero). */
+    overflow-x: hidden;
+    overflow-y: hidden;
   }
 
   .hero__copy {
     position: relative;
-    z-index: 2;
+    z-index: 3;
     display: grid;
+    justify-items: start;
     gap: 22px;
-    padding-top: 28px;
   }
 
-  .hero__copy h1 {
-    max-width: 12ch;
+  .hero__title {
+    max-width: none;
+    color: var(--brown);
+    font-family: var(--font-hero);
+    /* As big as fits: "GRAIN." is 3.44 x the font size wide. */
+    font-size: min(calc((100vw - 2 * var(--gutter)) / 3.5), 8.5rem);
+    font-weight: 900;
+    line-height: 0.84;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .hero__lede {
-    max-width: 44ch;
-    color: var(--heartwood);
+    max-width: 32ch;
     font-size: 1.125rem;
   }
 
@@ -642,32 +707,190 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 10px 28px;
-    margin-top: 6px;
+    margin-top: 2px;
+  }
+
+  /* Phones: the headline first, then the ornament, still bleeding off the
+     right edge but cropped so the dove and the words stay in view. Its twine
+     runs up behind the headline to the top of the page. */
+  .hero__ornament {
+    position: relative;
+    z-index: 2;
+    width: var(--orn-w);
+    margin: 28px 0 0 calc(var(--pad-inline) * -1);
+    pointer-events: none;
+  }
+
+  /* The swing is attached to this wrapper, never to the image, so swapping
+     the image file can't break it. */
+  .hero__hang {
+    position: relative;
+    transform-origin: var(--pivot-x) calc(var(--pivot-y) - var(--twine-reach));
+  }
+
+  .hero__img {
+    width: 100%;
+    height: auto;
+    /* A soft, realistic shadow on the paper behind. */
+    filter: drop-shadow(0 calc(var(--orn-h) * 0.01) calc(var(--orn-h) * 0.012) rgb(59 36 24 / 0.22))
+      drop-shadow(calc(var(--orn-h) * 0.03) calc(var(--orn-h) * 0.05) calc(var(--orn-h) * 0.04) rgb(59 36 24 / 0.3));
+  }
+
+  .hero__twine {
+    position: absolute;
+    left: var(--twine-left);
+    bottom: calc(100% - 2px);
+    width: var(--twine-w);
+    height: calc(var(--twine-reach) + 30vh);
+    background: url('../assets/hero-twine.webp') center bottom / 100% auto repeat-y;
+  }
+
+  /* Faint diagonal shadows across the hero, like sunlight through blinds. */
+  .hero__light {
+    position: absolute;
+    inset: -12%;
+    z-index: 4;
+    background: repeating-linear-gradient(
+      118deg,
+      transparent 0 calc(var(--slat) * 0.62),
+      var(--brown) calc(var(--slat) * 0.62) var(--slat)
+    );
+    opacity: 0.13;
+    filter: blur(16px);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    --slat: max(64px, 7vw);
+    -webkit-mask-image: linear-gradient(205deg, #000 5%, rgb(0 0 0 / 0.55) 45%, transparent 85%);
+    mask-image: linear-gradient(205deg, #000 5%, rgb(0 0 0 / 0.55) 45%, transparent 85%);
+  }
+
+  /* Feature strip along the bottom of the hero. */
+  .features {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+    padding: 18px 0 22px;
+    border-top: 1px solid var(--rule);
+    font-size: 0.8125rem;
+    font-weight: 550;
+    line-height: 1.35;
+  }
+
+  .features__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-inline: 8px;
+    text-align: center;
+  }
+
+  .features__item + .features__item {
+    border-left: 1px solid var(--rule);
+  }
+
+  .features__icon {
+    width: 24px;
+    height: 24px;
+    flex: none;
+    color: var(--green);
   }
 
   @media (min-width: 900px) {
     .hero {
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      column-gap: var(--col-gap);
-      min-height: max(100svh, 660px);
-      padding-bottom: 0;
-    }
-
-    .hero__stage {
-      --d: min(86cqw, 62cqh);
-      --disc-y: 53%;
-      grid-column: 7 / -1;
-      grid-row: 1;
-      height: auto;
-      margin-inline: 0;
+      --title: clamp(5rem, 10.6vw, 11.5rem);
+      /* The ornament's left edge: just short of the end of the headline's
+         longest line ("GRAIN." is 3.44 x the font size wide), so the
+         ornament overlaps it slightly. */
+      --orn-left: calc(var(--pad-inline) + var(--title) * 3.2);
+      /* About 1.5 x the screen height, but no larger than stays sharp, and
+         small enough that the dove and "Peace on Earth" stay on screen. */
+      --orn-h: min(150svh, var(--orn-cap), calc((100vw - var(--orn-left)) / 0.86 * 1141 / 974));
+      --orn-w: calc(var(--orn-h) * 974 / 1141);
+      min-height: max(100svh, calc(var(--orn-h) + 170px));
+      padding-top: calc(var(--header-h) + clamp(28px, 9vh, 110px));
     }
 
     .hero__copy {
-      grid-column: 1 / span 6;
-      grid-row: 1;
-      align-self: end;
-      gap: 26px;
-      padding-block: calc(var(--header-h) + 40px) clamp(56px, 10vh, 112px);
+      z-index: 2;
+      gap: 30px;
+    }
+
+    .hero__title {
+      font-size: var(--title);
+    }
+
+    .hero__lede {
+      font-size: 1.25rem;
+    }
+
+    .hero__ornament {
+      position: absolute;
+      z-index: 3;
+      top: -6px;
+      left: var(--orn-left);
+      margin: 0;
+    }
+
+    .features {
+      margin-top: auto;
+      padding-block: 26px 30px;
+      font-size: 1rem;
+    }
+
+    .features__item {
+      flex-direction: row;
+      justify-content: center;
+      gap: 14px;
+      padding-inline: 20px;
+      text-align: left;
+    }
+
+    .features__icon {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  /* Choose your wood */
+  .woods {
+    padding-bottom: 0;
+  }
+
+  .woods__list {
+    display: grid;
+    gap: var(--col-gap);
+    margin-top: clamp(32px, 4.5vw, 56px);
+  }
+
+  .woods__panel {
+    padding: clamp(26px, 3.4vw, 44px);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper);
+    background-position: 140px 360px;
+  }
+
+  .woods__icon {
+    width: 36px;
+    height: 36px;
+    color: var(--green);
+  }
+
+  .woods__panel h3 {
+    margin-top: 20px;
+  }
+
+  .woods__panel p {
+    margin-top: 12px;
+    color: var(--brown-soft);
+  }
+
+  @media (min-width: 720px) {
+    .woods__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
@@ -679,7 +902,7 @@
   }
 
   .section-head p {
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   .section-head .section-head__note {
@@ -704,14 +927,14 @@
     position: absolute;
     inset: auto 0 0;
     height: 1px;
-    background: var(--bark);
+    background: var(--brown);
     opacity: 0.22;
     transform: scaleX(var(--line));
     transform-origin: left;
   }
 
   .group__head p {
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   /* Products: an even grid of square cards. Photos are shown whole
@@ -728,14 +951,16 @@
     flex-direction: column;
   }
 
-  /* Every product image is a transparent cut-out, framed the same way, so all
-     cards share this one background. */
+  /* Every product image is a transparent cut-out, framed the same way, so
+     each sits straight on a card of the same paper. */
   .piece__media {
     position: relative;
     aspect-ratio: 1;
     overflow: hidden;
+    border: 1px solid var(--rule);
     border-radius: var(--radius);
-    background: var(--cream);
+    background: var(--paper);
+    background-position: 210px 470px;
   }
 
   .piece__inner {
@@ -764,27 +989,33 @@
   .piece__caption {
     flex: 1;
     display: grid;
-    grid-template-rows: auto auto 1fr;
-    gap: 6px;
+    grid-template-rows: auto auto auto 1fr auto;
+    gap: 8px;
     margin-top: 14px;
   }
 
   .piece__price {
-    color: var(--heartwood);
+    color: var(--brown-soft);
     font-size: var(--step--1);
     font-variant-numeric: lining-nums tabular-nums;
     line-height: 1.5;
   }
 
   .piece__price strong {
-    color: var(--bark);
+    color: var(--brown);
     font-weight: 600;
   }
 
   .piece__buy {
     justify-self: start;
     align-self: end;
-    margin-top: 16px;
+    margin-top: 12px;
+  }
+
+  .piece__note {
+    color: var(--brown-soft);
+    font-size: 0.8125rem;
+    line-height: 1.45;
   }
 
   @media (min-width: 560px) {
@@ -824,12 +1055,11 @@
   .custom {
     display: grid;
     gap: 56px;
-    background: var(--sapwood);
   }
 
   .custom__intro > p {
     margin-top: 20px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
     font-size: 1.125rem;
   }
 
@@ -851,8 +1081,9 @@
     place-items: center;
     width: 46px;
     height: 46px;
-    border: 1px solid var(--bark);
+    border: 1px solid var(--green);
     border-radius: 50%;
+    color: var(--green-dark);
     font-family: var(--font-display);
     font-size: 1.35rem;
     font-style: italic;
@@ -867,7 +1098,7 @@
 
   .steps__item p {
     margin-top: 4px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   .engraver__media {
@@ -875,7 +1106,7 @@
     aspect-ratio: 1;
     overflow: hidden;
     border-radius: var(--radius);
-    background: var(--ivory);
+    background: var(--paper);
   }
 
   .engraver__media img {
@@ -927,12 +1158,13 @@
     }
   }
 
-  /* How it's made. This block is the calm, static layout: everything visible
-     in order. Scripts add .is-pinned to turn it into the scroll story. */
+  /* How it's made, on brown paper. This block is the calm, static layout:
+     everything visible in order. Scripts add .is-pinned to turn it into the
+     scroll story. Green is too faint on brown, so accents here are cream. */
   .process {
-    --focus: var(--amber);
-    background: var(--walnut);
-    color: var(--ivory);
+    --focus: var(--cream);
+    background: var(--paper-dark);
+    color: var(--cream);
   }
 
   .process__pin {
@@ -987,9 +1219,9 @@
     place-items: center;
     width: 46px;
     height: 46px;
-    border: 1px solid var(--amber);
+    border: 1px solid var(--cream-soft);
     border-radius: 50%;
-    color: var(--amber);
+    color: var(--cream);
     font-family: var(--font-display);
     font-size: 1.35rem;
     font-style: italic;
@@ -1003,7 +1235,7 @@
   .process__step > p:last-child {
     margin-top: 8px;
     max-width: 34ch;
-    color: var(--sand);
+    color: var(--cream-soft);
   }
 
   .process__progress {
@@ -1040,7 +1272,7 @@
 
   .process__progress p {
     margin-left: 10px;
-    color: var(--amber);
+    color: var(--cream);
     font-family: var(--font-display);
     font-size: 1.125rem;
     font-style: italic;
@@ -1051,12 +1283,12 @@
     width: 28px;
     height: 3px;
     border-radius: 2px;
-    background: color-mix(in srgb, var(--ivory) 24%, transparent);
+    background: color-mix(in srgb, var(--cream) 24%, transparent);
     transition: background-color 0.4s ease;
   }
 
   .process__progress span.is-on {
-    background: var(--amber);
+    background: var(--cream);
   }
 
   @media (min-width: 900px) {
@@ -1089,7 +1321,7 @@
 
     .process.is-pinned .process__title {
       font-size: var(--step-1);
-      color: var(--sand);
+      color: var(--cream-soft);
     }
 
     .process.is-pinned .process__step h3 {
@@ -1106,7 +1338,7 @@
 
   .pricing__head p {
     margin-top: 16px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   .price-row {
@@ -1123,7 +1355,7 @@
     position: absolute;
     inset: 0 0 auto;
     height: 1px;
-    background: var(--bark);
+    background: var(--brown);
     opacity: 0.22;
     transform: scaleX(var(--line));
     transform-origin: left;
@@ -1135,7 +1367,7 @@
 
   .price-row__what p {
     margin-top: 4px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   .price-row__tiers {
@@ -1146,13 +1378,13 @@
   }
 
   .price-row__tiers li {
-    color: var(--heartwood);
+    color: var(--brown-soft);
     white-space: nowrap;
   }
 
   .price-row__tiers strong {
     font-variant-numeric: lining-nums tabular-nums;
-    color: var(--bark);
+    color: var(--brown);
     font-family: var(--font-display);
     font-size: var(--step-2);
     font-weight: 400;
@@ -1193,7 +1425,7 @@
     aspect-ratio: 3 / 2;
     overflow: hidden;
     border-radius: var(--radius);
-    background: var(--walnut);
+    background: var(--paper-dark);
   }
 
   .about__inner {
@@ -1209,12 +1441,12 @@
 
   .about__copy p {
     margin-top: 20px;
-    color: var(--heartwood);
+    color: var(--brown-soft);
   }
 
   .about__copy p:first-of-type {
     margin-top: 28px;
-    color: var(--bark);
+    color: var(--brown);
     font-size: 1.125rem;
   }
 
@@ -1234,8 +1466,7 @@
     }
   }
 
-  /* Customer reviews: quote cards on the same surface, corners and spacing
-     as the product cards. */
+  /* Customer reviews: small floating cards of frosted glass. */
   .reviews {
     padding-top: 0;
   }
@@ -1254,13 +1485,23 @@
     gap: 20px;
     margin: 0;
     padding: clamp(28px, 4vw, 48px);
-    border-radius: var(--radius);
-    background: var(--frame-bg, #fbf9f5);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    background: var(--glass);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .review {
+      background: var(--glass-solid);
+    }
   }
 
   .review__mark {
     height: 0.5em;
-    color: var(--amber-ink);
+    color: var(--green);
     font-family: var(--font-display);
     font-size: 4.5rem;
     line-height: 1;
@@ -1273,7 +1514,7 @@
 
   .review__quote p {
     max-width: none;
-    color: var(--bark);
+    color: var(--brown);
     font-family: var(--font-display);
     font-size: var(--step-1);
     line-height: 1.4;
@@ -1285,7 +1526,7 @@
   }
 
   .review__by {
-    color: var(--heartwood);
+    color: var(--brown-soft);
     font-size: var(--step--1);
     font-weight: 600;
   }
@@ -1296,14 +1537,14 @@
     }
   }
 
-  /* How to buy */
+  /* How to buy, on brown paper. */
   .buy__inner {
-    --focus: var(--amber);
+    --focus: var(--cream);
     display: grid;
     gap: 40px;
     padding: var(--section) var(--pad-inline);
-    background: var(--walnut);
-    color: var(--ivory);
+    background: var(--paper-dark);
+    color: var(--cream);
   }
 
   .buy__steps {
@@ -1315,12 +1556,13 @@
   }
 
   .buy__steps .steps__n {
-    border-color: var(--amber);
-    color: var(--amber);
+    border-color: var(--cream-soft);
+    color: var(--cream);
   }
 
   .buy__body .btn {
     margin-top: 40px;
+    box-shadow: 0 0 0 1px rgb(242 232 218 / 0.3);
   }
 
   @media (min-width: 900px) {
@@ -1339,13 +1581,14 @@
     }
   }
 
-  /* Footer */
+  /* Footer, on brown paper. */
   .site-footer {
-    --focus: var(--amber);
+    --focus: var(--cream);
     padding: clamp(56px, 8vw, 112px) var(--pad-inline) 40px;
     overflow: clip;
-    background: var(--walnut-deep);
-    color: var(--ivory);
+    border-top: 1px solid color-mix(in srgb, var(--cream) 14%, transparent);
+    background: var(--paper-dark);
+    color: var(--cream);
   }
 
   /* The transparent lockup sits inside a square with wide empty margins
@@ -1364,7 +1607,7 @@
     gap: 20px;
     margin-top: clamp(40px, 6vw, 80px);
     padding-top: 24px;
-    border-top: 1px solid color-mix(in srgb, var(--ivory) 22%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--cream) 22%, transparent);
   }
 
   .site-footer__tag {
@@ -1380,7 +1623,7 @@
   }
 
   .site-footer__fine {
-    color: var(--sand);
+    color: var(--cream-soft);
     font-size: var(--step--1);
   }
 
@@ -1399,25 +1642,11 @@
 
 /* ----------------------------------------------------------------- motion */
 @layer motion {
-  /* Before the page-load sequence runs, hold the hero copy and header back. */
+  /* Before the page-load sequence runs, hold the hero and header back. */
   .motion.is-loading .hero__copy,
+  .motion.is-loading .hero__ornament,
   .motion.is-loading .site-header {
     opacity: 0;
-  }
-
-  /* With motion on, WebGL draws the ornament; the plain image stays as the
-     fallback and only shows if WebGL is unavailable. */
-  .motion .hero__fallback {
-    opacity: 0;
-    transition: opacity 0.6s ease;
-  }
-
-  .motion .hero--static .hero__fallback {
-    opacity: 1;
-  }
-
-  .hero--webgl .hero__canvas {
-    opacity: 1;
   }
 
   /* SplitText line masks: leave room for descenders and italics. */

@@ -64,13 +64,19 @@ function startLenis() {
 
 /* --------------------------------------------------------------------- hero */
 
-function hero(lenis) {
+// The hero ornament swings about 2.5° either way, once every 7 seconds: the
+// same speed as before, at a smaller angle now that it's so large.
+const SWING = 2.5;
+const HALF_SWING_SECONDS = 3.5;
+
+function hero() {
   const el = $('.hero');
-  const stage = $('[data-hero-stage]', el);
   const title = $('[data-hero-title]', el);
+  const ornament = $('[data-hero-ornament]', el);
+  const hang = $('[data-hero-hang]', el);
 
   // One orchestrated moment on load: the headline rises line by line while the
-  // ornament drops in on its twine (see hero-ornament.js).
+  // ornament swings into place on its twine.
   document.documentElement.classList.remove('is-loading');
   SplitText.create(title, {
     type: 'lines',
@@ -83,47 +89,33 @@ function hero(lenis) {
   gsap.from($$('[data-hero-fade]', el), { opacity: 0, y: 18, duration: 0.9, stagger: 0.12, ease: 'power3.out', delay: 0.8 });
   gsap.from('[data-header]', { opacity: 0, duration: 0.9, ease: 'power2.out', delay: 0.5 });
 
+  // The swing lives on the wrapper (.hero__hang), never on the image, and
+  // turns around the top of the twine (transform-origin is set in CSS).
+  gsap.from(ornament, { opacity: 0, duration: 1.2, ease: 'power2.out', delay: 0.1 });
+  const swing = gsap
+    .timeline()
+    .fromTo(hang, { rotation: -7 }, { rotation: SWING, duration: 2, ease: 'power2.out', delay: 0.1 })
+    .to(hang, { rotation: -SWING, duration: HALF_SWING_SECONDS, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+
   // Depth: the ornament drifts more slowly than the page as the hero leaves.
-  gsap.to(stage, {
-    yPercent: 12,
+  gsap.to(ornament, {
+    yPercent: 4,
     ease: 'none',
     scrollTrigger: { trigger: el, start: 'top top', end: 'bottom top', scrub: true },
   });
 
-  let ornament = null;
-  let cancelled = false;
-  if (!supportsWebGL()) {
-    el.classList.add('hero--static');
-  } else {
-    // If WebGL is slow to arrive, show the plain image rather than an empty stage.
-    const patience = setTimeout(() => el.classList.add('hero--static'), 3500);
-    import('./hero-ornament.js')
-      .then(({ createHeroOrnament }) =>
-        createHeroOrnament({
-          stage,
-          canvas: $('[data-hero-canvas]', el),
-          disc: $('[data-hero-disc]', el),
-          lenis,
-        }),
-      )
-      .then((instance) => {
-        clearTimeout(patience);
-        if (cancelled) return instance.dispose();
-        ornament = instance;
-        el.classList.remove('hero--static');
-        el.classList.add('hero--webgl');
-      })
-      .catch(() => {
-        clearTimeout(patience);
-        el.classList.add('hero--static');
-      });
-  }
+  // It stops swinging while the hero is out of sight.
+  const inView = ScrollTrigger.create({
+    trigger: el,
+    start: 'top bottom',
+    end: 'bottom top',
+    onToggle: (self) => swing.paused(!self.isActive),
+  });
 
   return () => {
-    cancelled = true;
-    ornament?.dispose();
-    el.classList.remove('hero--webgl');
-    el.classList.add('hero--static');
+    inView.kill();
+    swing.kill();
+    gsap.set(hang, { clearProps: 'transform' });
   };
 }
 
@@ -429,9 +421,9 @@ export function initMotion() {
 
   const media = gsap.matchMedia();
 
+  // With reduced motion nothing here runs: the ornament hangs still.
   media.add('(prefers-reduced-motion: reduce)', () => {
     root.classList.remove('motion', 'is-loading');
-    $('.hero')?.classList.add('hero--static');
   });
 
   media.add('(prefers-reduced-motion: no-preference)', () => {
@@ -439,7 +431,7 @@ export function initMotion() {
     smooth = startLenis();
 
     const cleanups = [
-      hero(smooth.lenis),
+      hero(),
       textReveals(),
       imageReveals(),
       hoverSheen(),

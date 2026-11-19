@@ -1,9 +1,10 @@
 // Hover treatment for collection photos: a band of light crosses the piece and
 // the image bends very slightly under the pointer, like looking through a lens.
 // One shared WebGL canvas moves to whichever tile is hovered, so the cost is a
-// single small context no matter how many tiles there are.
+// single small context no matter how many tiles there are. The canvas is
+// transparent wherever the photo is, so the card's paper shows through.
 
-import { LinearFilter, Mesh, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, Texture, Vector2, Vector3, WebGLRenderer } from 'three';
+import { LinearFilter, Mesh, NoBlending, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial, Texture, Vector2, WebGLRenderer } from 'three';
 
 const vertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -21,13 +22,11 @@ const fragmentShader = /* glsl */ `
   uniform float uHover;
   uniform float uTime;
   uniform float uSheen;
-  uniform vec3 uBg;
   uniform float uContain;
   varying vec2 vUv;
 
   // Same fit as the photo's CSS object-fit (cover or contain). With contain,
-  // anything outside the photo shows the frame colour, and so do the photo's
-  // transparent parts.
+  // anything outside the photo is left transparent.
   vec2 fit(vec2 uv) {
     float box = uRes.x / uRes.y;
     float img = uImg.x / uImg.y;
@@ -47,22 +46,23 @@ const fragmentShader = /* glsl */ `
 
     vec2 st = fit(uv);
     bool inside = all(greaterThanEqual(st, vec2(0.0))) && all(lessThanEqual(st, vec2(1.0)));
-    vec4 photo = inside ? texture2D(uTex, st) : vec4(uBg, 1.0); // premultiplied
-    vec3 color = photo.rgb + uBg * (1.0 - photo.a);
+    vec4 photo = inside ? texture2D(uTex, st) : vec4(0.0); // premultiplied
 
+    // The light falls on the piece only, not on the paper around it.
     float band = (vUv.x + (1.0 - vUv.y) * 0.55) - uSheen;
-    color += exp(-band * band * 34.0) * 0.17 * vec3(1.0, 0.93, 0.8);
-    color += smoothstep(0.55, 0.0, dist) * 0.045 * uHover * vec3(1.0, 0.9, 0.74);
+    vec3 light = exp(-band * band * 34.0) * 0.17 * vec3(1.0, 0.93, 0.8);
+    light += smoothstep(0.55, 0.0, dist) * 0.045 * uHover * vec3(1.0, 0.9, 0.74);
 
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(photo.rgb + light * photo.a, photo.a);
   }
 `;
 
 export function createHoverSheen(tiles) {
   const canvas = document.createElement('canvas');
   canvas.setAttribute('aria-hidden', 'true');
-  const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: 'low-power' });
+  const renderer = new WebGLRenderer({ canvas, antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
 
   const uniforms = {
     uTex: { value: null },
@@ -72,10 +72,10 @@ export function createHoverSheen(tiles) {
     uHover: { value: 0 },
     uTime: { value: 0 },
     uSheen: { value: -0.7 },
-    uBg: { value: new Vector3(1, 1, 1) },
     uContain: { value: 0 },
   };
-  const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+  // Written straight out, already premultiplied, onto the transparent canvas.
+  const material = new ShaderMaterial({ uniforms, vertexShader, fragmentShader, blending: NoBlending });
   const geometry = new PlaneGeometry(2, 2);
   const scene = new Scene();
   scene.add(new Mesh(geometry, material));
@@ -88,8 +88,11 @@ export function createHoverSheen(tiles) {
   let frame = 0;
   let last = 0;
 
+  // One texture per photo URL, so a card that swaps to its walnut photo gets
+  // the right one.
   function textureFor(img) {
-    let texture = textures.get(img);
+    const key = img.currentSrc || img.src;
+    let texture = textures.get(key);
     if (!texture) {
       texture = new Texture(img);
       texture.minFilter = LinearFilter;
@@ -98,7 +101,7 @@ export function createHoverSheen(tiles) {
       // Premultiplied, so filtering never pulls dark fringes into cut-out edges.
       texture.premultiplyAlpha = true;
       texture.needsUpdate = true;
-      textures.set(img, texture);
+      textures.set(key, texture);
     }
     return texture;
   }
@@ -132,8 +135,6 @@ export function createHoverSheen(tiles) {
     renderer.setSize(inner.clientWidth, inner.clientHeight, false);
     uniforms.uRes.value.set(inner.clientWidth, inner.clientHeight);
     uniforms.uImg.value.set(img.naturalWidth, img.naturalHeight);
-    const [r, g, b] = getComputedStyle(inner.parentElement).backgroundColor.match(/[\d.]+/g).map(Number);
-    uniforms.uBg.value.set(r / 255, g / 255, b / 255);
     uniforms.uContain.value = getComputedStyle(img).objectFit === 'contain' ? 1 : 0;
     uniforms.uTex.value = textureFor(img);
     uniforms.uSheen.value = -0.7;

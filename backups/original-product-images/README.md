@@ -13,5 +13,5 @@ cp backups/original-product-images/images/collection/vinyl-record.webp public/im
 The cards' shared background and sizes live in `index.html` and
 `src/styles/main.css`; git history has their earlier versions.
 
-Keep `products/peace-on-earth.webp`: `scripts/make-placeholders.mjs` reads it to
-build the hero ornament's face.
+`products/peace-on-earth.webp` is also the source of the hero image,
+`public/images/hero-ornament.webp`: the same photo cut out at full size.
